@@ -1,0 +1,100 @@
+class Solution(object):
+    def pathExistenceQueries(self, n, nums, maxDiff, queries):
+        # 1. Create a sorted list of pairs: (value, original_index)
+        sorted_nodes = sorted((nums[i], i) for i in range(n))
+        
+        # Track the sorted index location for each original node index
+        pos = [0] * n
+        for i in range(n):
+            pos[sorted_nodes[i][1]] = i
+            
+        # 2. Use a two-pointer approach to find the farthest right index 
+        # each node can jump to in a single step (nxt0)
+        nxt0 = [0] * n
+        r = 0
+        for i in range(n):
+            if r < i:
+                r = i
+            while r + 1 < n and sorted_nodes[r + 1][0] - sorted_nodes[i][0] <= maxDiff:
+                r += 1
+            nxt0[i] = r
+
+        # 3. Precompute binary lifting lists for O(1) row lookups
+        nxt1 = [nxt0[x] for x in nxt0]
+        nxt2 = [nxt1[x] for x in nxt1]
+        nxt3 = [nxt2[x] for x in nxt2]
+        nxt4 = [nxt3[x] for x in nxt3]
+        nxt5 = [nxt4[x] for x in nxt4]
+        nxt6 = [nxt5[x] for x in nxt5]
+        nxt7 = [nxt6[x] for x in nxt6]
+        nxt8 = [nxt7[x] for x in nxt7]
+        nxt9 = [nxt8[x] for x in nxt8]
+        nxt10 = [nxt9[x] for x in nxt9]
+        nxt11 = [nxt10[x] for x in nxt10]
+        nxt12 = [nxt11[x] for x in nxt11]
+        nxt13 = [nxt12[x] for x in nxt12]
+        nxt14 = [nxt13[x] for x in nxt13]
+        nxt15 = [nxt14[x] for x in nxt14]
+        nxt16 = [nxt15[x] for x in nxt15]
+
+        ans = []
+        for u, v in queries:
+            if u == v:
+                ans.append(0)
+                continue
+                
+            # Convert original indices to sorted position coordinates
+            a, b = pos[u], pos[v]
+            if a > b:
+                a, b = b, a  # Always traverse from left to right
+                
+            steps = 0
+            curr = a
+            
+            # Properly formatted unrolled binary lifting blocks
+            nv = nxt16[curr]
+            if nv < b: curr = nv; steps += 65536
+            nv = nxt15[curr]
+            if nv < b: curr = nv; steps += 32768
+            nv = nxt14[curr]
+            if nv < b: curr = nv; steps += 16384
+            nv = nxt13[curr]
+            if nv < b: curr = nv; steps += 8192
+            nv = nxt12[curr]
+            if nv < b: curr = nv; steps += 4096
+            nv = nxt11[curr]
+            if nv < b: curr = nv; steps += 2048
+            nv = nxt10[curr]
+            if nv < b: curr = nv; steps += 1024
+            nv = nxt9[curr]
+            if nv < b: curr = nv; steps += 512
+            nv = nxt8[curr]
+            if nv < b: curr = nv; steps += 256
+            nv = nxt7[curr]
+            if nv < b: curr = nv; steps += 128
+            nv = nxt6[curr]
+            if nv < b: curr = nv; steps += 64
+            nv = nxt5[curr]
+            if nv < b: curr = nv; steps += 32
+            nv = nxt4[curr]
+            if nv < b: curr = nv; steps += 16
+            nv = nxt3[curr]
+            if nv < b: curr = nv; steps += 8
+            nv = nxt2[curr]
+            if nv < b: curr = nv; steps += 4
+            nv = nxt1[curr]
+            if nv < b: curr = nv; steps += 2
+            nv = nxt0[curr]
+            if nv < b: curr = nv; steps += 1
+            
+            # Final step to bridge any remaining gap
+            if curr < b:
+                curr = nxt0[curr]
+                steps += 1
+                
+            if curr < b:
+                ans.append(-1)
+            else:
+                ans.append(steps)
+                
+        return ans
