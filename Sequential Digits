@@ -1,0 +1,19 @@
+class Solution {
+public:
+    vector<int> sequentialDigits(int low, int high) {
+        vector<int> ans;
+        string digits = "123456789";
+
+        // Length of the numbers to generate
+        for (int len = to_string(low).size(); len <= to_string(high).size(); len++) {
+            for (int start = 0; start + len <= 9; start++) {
+                int num = stoi(digits.substr(start, len));
+
+                if (num >= low && num <= high)
+                    ans.push_back(num);
+            }
+        }
+
+        return ans;
+    }
+};
