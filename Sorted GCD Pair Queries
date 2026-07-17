@@ -1,0 +1,52 @@
+class Solution {
+public:
+    vector<int> gcdValues(vector<int>& nums, vector<long long>& queries) {
+        int MAXV = *max_element(nums.begin(), nums.end());
+        
+        vector<long long> freq(MAXV + 1, 0);
+        for (int x : nums) freq[x]++;
+        
+        // count[d] = number of pairs whose gcd is exactly d
+        vector<long long> count(MAXV + 1, 0);
+        
+        for (int d = 1; d <= MAXV; d++) {
+            long long total = 0;
+            
+            // Count numbers divisible by d
+            for (int m = d; m <= MAXV; m += d) {
+                total += freq[m];
+            }
+            
+            // Number of pairs among those numbers
+            count[d] = total * (total - 1) / 2;
+        }
+        
+        // Inclusion-exclusion (Mobius style)
+        for (int d = MAXV; d >= 1; d--) {
+            for (int m = 2 * d; m <= MAXV; m += d) {
+                count[d] -= count[m];
+            }
+        }
+        
+        vector<long long> prefix(MAXV + 1);
+        for (int i = 1; i <= MAXV; i++) {
+            prefix[i] = prefix[i - 1] + count[i];
+        }
+        
+        vector<int> ans;
+        for (long long q : queries) {
+            // Find smallest gcd value whose prefix count > q
+            int l = 1, r = MAXV;
+            while (l < r) {
+                int mid = l + (r - l) / 2;
+                if (prefix[mid] > q)
+                    r = mid;
+                else
+                    l = mid + 1;
+            }
+            ans.push_back(l);
+        }
+        
+        return ans;
+    }
+};
