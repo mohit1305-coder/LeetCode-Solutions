@@ -1,0 +1,98 @@
+import bisect
+
+class Solution:
+    def maxActiveSectionsAfterTrade(self, s, queries):
+        n = len(s)
+        
+        # 1. Total '1's in the entire string s
+        total_ones = s.count('1')
+
+        # 2. Precompute zero block boundaries
+        zero_start = [-1] * n
+        zero_end = [-1] * n
+        
+        i = 0
+        while i < n:
+            if s[i] == '0':
+                st = i
+                while i < n and s[i] == '0':
+                    i += 1
+                en = i - 1
+                for k in range(st, en + 1):
+                    zero_start[k] = st
+                    zero_end[k] = en
+            else:
+                i += 1
+
+        # 3. Collect valid '1'-blocks strictly surrounded by '0's in s
+        blocks = []
+        i = 0
+        while i < n:
+            if s[i] == '1':
+                st = i
+                while i < n and s[i] == '1':
+                    i += 1
+                en = i - 1
+                
+                # Check if strictly surrounded by '0's in string s
+                if st > 0 and en < n - 1 and s[st - 1] == '0' and s[en + 1] == '0':
+                    L0 = zero_start[st - 1]
+                    R0 = zero_end[en + 1]
+                    full_gain = (st - L0) + (R0 - en)
+                    blocks.append((st, en, L0, R0, full_gain))
+            else:
+                i += 1
+
+        num_blocks = len(blocks)
+        block_starts = [b[0] for b in blocks]
+        block_ends = [b[1] for b in blocks]
+
+        # 4. Sparse Table for Range Maximum Query over full_gain
+        if num_blocks > 0:
+            K = num_blocks.bit_length()
+            st_table = [[0] * K for _ in range(num_blocks)]
+            
+            for i in range(num_blocks):
+                st_table[i][0] = blocks[i][4]
+                
+            for j in range(1, K):
+                length = 1 << (j - 1)
+                for i in range(num_blocks - (1 << j) + 1):
+                    st_table[i][j] = max(st_table[i][j - 1], st_table[i + length][j - 1])
+
+            def query_sparse_table(l_idx, r_idx):
+                if l_idx > r_idx:
+                    return 0
+                length = r_idx - l_idx + 1
+                j = length.bit_length() - 1
+                return max(st_table[l_idx][j], st_table[r_idx - (1 << j) + 1][j])
+        else:
+            def query_sparse_table(l_idx, r_idx):
+                return 0
+
+        # Calculate trade gain for a block clipped at query boundaries l and r
+        def calc_gain(b_idx, l, r):
+            st, en, L0, R0, _ = blocks[b_idx]
+            a = st - max(l, L0)
+            b = min(r, R0) - en
+            return a + b
+
+        # 5. Answer each query
+        ans = []
+        for l, r in queries:
+            # Find all blocks completely contained in s[l..r]
+            idx_left = bisect.bisect_right(block_starts, l)
+            idx_right = bisect.bisect_left(block_ends, r) - 1
+            
+            if idx_left <= idx_right:
+                gain_left = calc_gain(idx_left, l, r)
+                gain_right = calc_gain(idx_right, l, r)
+                gain_mid = query_sparse_table(idx_left + 1, idx_right - 1)
+                max_gain = max(gain_left, gain_right, gain_mid)
+            else:
+                max_gain = 0
+                
+            # Result is total 1s in the entire string s + trade gain in s[l..r]
+            ans.append(total_ones + max_gain)
+            
+        return ans
