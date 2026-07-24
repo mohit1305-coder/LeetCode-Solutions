@@ -1,0 +1,43 @@
+class Solution {
+public:
+    int uniqueXorTriplets(vector<int>& nums) {
+        const int MAXX = 2048;
+
+        sort(nums.begin(), nums.end());
+        nums.erase(unique(nums.begin(), nums.end()), nums.end());
+
+        vector<bool> dp1(MAXX, false), dp2(MAXX, false), dp3(MAXX, false);
+
+        for (int v : nums) {
+            vector<bool> ndp1 = dp1;
+            vector<bool> ndp2 = dp2;
+            vector<bool> ndp3 = dp3;
+
+            // form triples
+            for (int x = 0; x < MAXX; x++) {
+                if (dp2[x])
+                    ndp3[x ^ v] = true;
+            }
+
+            // form pairs
+            for (int x = 0; x < MAXX; x++) {
+                if (dp1[x])
+                    ndp2[x ^ v] = true;
+            }
+
+            // single element
+            ndp1[v] = true;
+
+            dp1.swap(ndp1);
+            dp2.swap(ndp2);
+            dp3.swap(ndp3);
+        }
+
+        int ans = 0;
+        for (int x = 0; x < MAXX; x++) {
+            if (dp1[x] || dp3[x])
+                ans++;
+        }
+        return ans;
+    }
+};
